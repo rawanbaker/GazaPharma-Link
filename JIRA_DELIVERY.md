@@ -94,5 +94,5 @@ feat(scrum-8): add medicine search results and availability details UI
 ## Branch Name Suggestion
 
 ```bash
-scrum-8-saja-results-interface
+scrum-8-kamlahd-results-interface
 ```
