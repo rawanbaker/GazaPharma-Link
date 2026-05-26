@@ -4,8 +4,7 @@
 **SCRUM-8: تصميم واجهة عرض نتائج البحث وتفاصيل توفر الدواء في الصيدليات**
 
 ## Assignee
-**سجى — Frontend Developer**
-
+**frontdevlper كامله أبو ظاهر**
 ## Description
 This feature implements a professional multi-screen frontend flow for the medicine search results task in the GazaPharma Link project.
 
