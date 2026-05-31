@@ -1,45 +1,39 @@
 package com.gazapharma.pharma_search;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/medicines")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // لتسهيل ربط الـ Frontend لاحقاً دون قيود الحماية
 public class MedicineController {
 
-    @Autowired
-    private MedicineRepository medicineRepository;
+    private final MedicineRepository medicineRepository;
 
-    @GetMapping
-    public List<Medicine> getAllMedicines() {
-        return medicineRepository.findAll();
+    // حقن المستودع برمجياً للوصول للدوال
+    public MedicineController(MedicineRepository medicineRepository) {
+        this.medicineRepository = medicineRepository;
     }
 
     @GetMapping("/search")
-    public List<Medicine> searchMedicines(
-        @RequestParam(required = false) String tradeName,
-        @RequestParam(required = false) String scientificName,
-        @RequestParam(required = false) String activeIngredient,
-        @RequestParam(required = false) String category,
-        @RequestParam(required = false) String stockStatus,
-        @RequestParam(required = false) Boolean available) {
+    public List<Medicine> search(@RequestParam("query") String query) {
+        // أولاً: نقوم بالبحث بالكلمة التي أدخلها المستخدم
+        List<Medicine> results = medicineRepository.searchMedication(query);
 
-        if (tradeName != null)
-            return medicineRepository.findByTradeNameContainingIgnoreCase(tradeName);
-        if (scientificName != null)
-            return medicineRepository.findByScientificNameContainingIgnoreCase(scientificName);
-        if (activeIngredient != null)
-            return medicineRepository.findByActiveIngredientContainingIgnoreCase(activeIngredient);
-        if (category != null)
-            return medicineRepository.findByCategoryContainingIgnoreCase(category);
-        if (stockStatus != null)
-            return medicineRepository.findByStockStatus(stockStatus);
-        if (available != null)
-            return medicineRepository.findByAvailable(available);
+        // ثانياً: منطق البدائل الذكي في غزة - إذا لم نجد الدواء أو وجدناه ولكن حالته "غير متوفر" في المخزن
+        if (results.isEmpty() || isAllOut(results)) {
+            System.out.println("الدواء المطلوب غير متوفر حالياً، جاري جلب البدائل ذات نفس المادة الفعالة تلقائياً...");
+            
+            // نستخدم دالة البحث عن البدائل بناءً على الكلمة المكتوبة (الاسم العلمي)
+            return medicineRepository.findSubstitutes(query);
+        }
 
-        return medicineRepository.findAll();
+        // إذا كان متوفراً، نرجعه للمستخدم مباشرة
+        return results;
+    }
+
+    // دالة مساعدة لفحص ما إذا كانت جميع نتائج الدواء المبحوث عنه "غير متوفرة"
+    private boolean isAllOut(List<Medicine> list) {
+        return list.stream().allMatch(m -> "Out of Stock".equalsIgnoreCase(m.getStatus()));
     }
 }
-

@@ -1,22 +1,20 @@
 package com.gazapharma.pharma_search;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.List;
 
-@Repository
 public interface MedicineRepository extends JpaRepository<Medicine, Long> {
 
-    List<Medicine> findByTradeNameContainingIgnoreCase(String tradeName);
+    // 1. استعلام البحث المتعدد (بالاسم التجاري، العلمي، أو التصنيف)
+    @Query("SELECT m FROM Medicine m WHERE " +
+           "LOWER(m.tradeName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.scientificName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(m.category) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Medicine> searchMedication(@Param("query") String query);
 
-    List<Medicine> findByScientificNameContainingIgnoreCase(String scientificName);
-
-    List<Medicine> findByActiveIngredientContainingIgnoreCase(String activeIngredient);
-
-    List<Medicine> findByAvailable(boolean available);
-
-    List<Medicine> findByStockStatus(String stockStatus);
-
-    List<Medicine> findByCategoryContainingIgnoreCase(String category);
+    // 2. استعلام جلب البدائل المتوفرة (نفس الاسم العلمي وحالة المخزون ليست نفاذ)
+    @Query("SELECT m FROM Medicine m WHERE LOWER(m.scientificName) = LOWER(:scientificName) AND m.status != 'Out of Stock'")
+    List<Medicine> findSubstitutes(@Param("scientificName") String scientificName);
 }
-

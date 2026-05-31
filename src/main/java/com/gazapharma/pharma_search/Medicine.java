@@ -10,32 +10,68 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "trade_name", nullable = false)
     private String tradeName;
+
+    @Column(name = "scientific_name", nullable = false)
     private String scientificName;
-    private String activeIngredient;
+
+    @Column(name = "category")
     private String category;
-    private boolean available;
-    private String stockStatus;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Column(name = "status")
+    private String status;
 
-    public String getTradeName() { return tradeName; }
-    public void setTradeName(String tradeName) { this.tradeName = tradeName; }
+    // 1. المِشيد الافتراضي (Default Constructor) - ضروري جداً لـ JPA
+    public Medicine() {
+    }
 
-    public String getScientificName() { return scientificName; }
-    public void setScientificName(String scientificName) { this.scientificName = scientificName; }
+    // 2. مِشيد مخصص لسهولة إنشاء الكائنات (Parameterized Constructor)
+    public Medicine(String tradeName, String scientificName, String category, String status) {
+        this.tradeName = tradeName;
+        this.scientificName = scientificName;
+        this.category = category;
+        this.status = status;
+    }
 
-    public String getActiveIngredient() { return activeIngredient; }
-    public void setActiveIngredient(String activeIngredient) { this.activeIngredient = activeIngredient; }
+    // 3. دالات الجلب والتعديل (Getters and Setters)
+    public Long getId() {
+        return id;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public boolean isAvailable() { return available; }
-    public void setAvailable(boolean available) { this.available = available; }
+    public String getTradeName() {
+        return tradeName;
+    }
 
-    public String getStockStatus() { return stockStatus; }
-    public void setStockStatus(String stockStatus) { this.stockStatus = stockStatus; }
+    public void setTradeName(String tradeName) {
+        this.tradeName = tradeName;
+    }
+
+    public String getScientificName() {
+        return scientificName;
+    }
+
+    public void setScientificName(String scientificName) {
+        this.scientificName = scientificName;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
-
