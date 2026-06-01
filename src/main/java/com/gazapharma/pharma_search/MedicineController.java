@@ -36,4 +36,8 @@ public class MedicineController {
     private boolean isAllOut(List<Medicine> list) {
         return list.stream().allMatch(m -> "Out of Stock".equalsIgnoreCase(m.getStatus()));
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d029d71ff7ea6fe51e9cd9cab62fa369e69beec3

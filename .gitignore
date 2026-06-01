@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -31,3 +32,25 @@ build/
 
 ### VS Code ###
 .vscode/
+=======
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# Logs and temp files
+*.log
+tmp/
+temp/
+
+# Backup files
+*.bak
+*.tmp
+>>>>>>> d029d71ff7ea6fe51e9cd9cab62fa369e69beec3

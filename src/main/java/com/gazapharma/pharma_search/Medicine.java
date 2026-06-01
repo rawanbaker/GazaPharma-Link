@@ -74,4 +74,8 @@ public class Medicine {
     public void setStatus(String status) {
         this.status = status;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d029d71ff7ea6fe51e9cd9cab62fa369e69beec3
