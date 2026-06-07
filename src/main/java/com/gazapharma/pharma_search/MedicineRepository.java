@@ -17,4 +17,7 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
     // 2. استعلام جلب البدائل المتوفرة (نفس الاسم العلمي وحالة المخزون ليست نفاذ)
     @Query("SELECT m FROM Medicine m WHERE LOWER(m.scientificName) = LOWER(:scientificName) AND m.status != 'Out of Stock'")
     List<Medicine> findSubstitutes(@Param("scientificName") String scientificName);
+   // 3. استعلام جلب تفاصيل الموقع الجغرافي والعنوان للصيدلية بناءً على المعرّف (SCRUM-15)
+    @Query(value = "SELECT id, name, district, street_address as streetAddress, latitude, longitude FROM pharmacies WHERE id = :pharmacyId", nativeQuery = true)
+    Pharmacy findPharmacyLocationData(@Param("pharmacyId") int pharmacyId);
 }

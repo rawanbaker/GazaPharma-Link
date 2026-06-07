@@ -36,4 +36,30 @@ public class MedicineController {
     private boolean isAllOut(List<Medicine> list) {
         return list.stream().allMatch(m -> "Out of Stock".equalsIgnoreCase(m.getStatus()));
     }
+    // 3. (SCRUM-15) الخاص بجلب موقع الصيدلية وتنسيق العنوان الجغرافي API مسار 
+    @GetMapping("/location")
+    public org.springframework.http.ResponseEntity<?> getPharmacyLocation(@RequestParam int pharmacyId) {
+        try {
+            Pharmacy pharmacy = medicineRepository.findPharmacyLocationData(pharmacyId);
+            
+            if (pharmacy != null) {
+                java.util.Map<String, Object> response = new java.util.HashMap<>();
+                response.put("pharmacyId", pharmacy.getId());
+                response.put("pharmacyName", pharmacy.getName());
+                
+                // صياغة تفصيلية مطابقة تماماً للمعيار المطلوب
+                String fullAddress = "Gaza, " + pharmacy.getDistrict() + " District, " + pharmacy.getStreetAddress();
+                response.put("fullAddress", fullAddress);
+                
+                response.put("latitude", pharmacy.getLatitude());
+                response.put("longitude", pharmacy.getLongitude());
+                
+                return org.springframework.http.ResponseEntity.ok(response);
+            } else {
+                return org.springframework.http.ResponseEntity.status(404).body("Location not found");
+            }
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
 }
