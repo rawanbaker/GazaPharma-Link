@@ -1,31 +1,28 @@
 import React, { useMemo, useState } from "react";
 import "./SearchResultsPage.css";
+import MapComponent from "../components/MapComponent";
 import {
-  Search,
-  Phone,
-  MapPin,
-  Clock,
   AlertTriangle,
-  ArrowRight,
   ArrowLeft,
-  Pill,
-  ShieldCheck,
-  WifiOff,
-  Send,
+  ArrowRight,
   CheckCircle2,
+  Clock,
+  Filter,
+  HeartPulse,
+  ListChecks,
+  Map,
+  MapPin,
+  Package,
+  Phone,
+  Pill,
+  Search,
+  Send,
+  ShieldCheck,
+  SlidersHorizontal,
+  WifiOff,
+  X,
   XCircle,
 } from "lucide-react";
-
-/**
- * SCRUM-8 — GazaPharma Link
- * Professional multi-screen frontend flow without progress bar.
- *
- * Screens:
- * 1) Search Screen
- * 2) Results Screen
- * 3) Unavailable Medicine Request Screen
- * 4) Available Medicine Details Screen
- */
 
 const pharmacies = [
   {
@@ -39,11 +36,13 @@ const pharmacies = [
     quantity: 12,
     lastUpdatedMinutes: 15,
     area: "الرمال - غزة",
+    neighborhood: "الرمال",
     distanceKm: 1.2,
     phone: "0599000001",
     trustLevel: "Verified",
     isStale: false,
-    workingHours: "9:00 صباحًا - 8:00 مساءً",
+    workingHours: "9:00 ص - 8:00 م",
+    mapPosition: { x: 44, y: 27 },
     note: "يفضل الاتصال قبل الذهاب لأن حالة المخزون قد تتغير بسرعة.",
   },
   {
@@ -57,11 +56,13 @@ const pharmacies = [
     quantity: 3,
     lastUpdatedMinutes: 35,
     area: "النصر - غزة",
+    neighborhood: "النصر",
     distanceKm: 2.4,
     phone: "0599000002",
     trustLevel: "Verified",
     isStale: false,
-    workingHours: "10:00 صباحًا - 7:00 مساءً",
+    workingHours: "10:00 ص - 7:00 م",
+    mapPosition: { x: 66, y: 42 },
     note: "الكمية محدودة وقد تنفد خلال وقت قصير.",
   },
   {
@@ -75,11 +76,13 @@ const pharmacies = [
     quantity: 0,
     lastUpdatedMinutes: 80,
     area: "تل الهوى - غزة",
+    neighborhood: "تل الهوى",
     distanceKm: 3.1,
     phone: "0599000003",
     trustLevel: "Verified",
     isStale: false,
-    workingHours: "8:00 صباحًا - 6:00 مساءً",
+    workingHours: "8:00 ص - 6:00 م",
+    mapPosition: { x: 36, y: 62 },
     note: "الدواء غير متوفر حاليًا في هذه الصيدلية.",
   },
   {
@@ -93,11 +96,13 @@ const pharmacies = [
     quantity: 7,
     lastUpdatedMinutes: 190,
     area: "الشجاعية - غزة",
+    neighborhood: "الشجاعية",
     distanceKm: 4.6,
     phone: "0599000004",
     trustLevel: "Needs Review",
     isStale: true,
-    workingHours: "9:30 صباحًا - 9:00 مساءً",
+    workingHours: "9:30 ص - 9:00 م",
+    mapPosition: { x: 77, y: 64 },
     note: "هذه البيانات قديمة وتحتاج إلى تأكيد من الصيدلية.",
   },
 ];
@@ -106,23 +111,35 @@ const statusMap = {
   IN_STOCK: {
     label: "متوفر",
     className: "status-green",
-    icon: <CheckCircle2 size={16} />,
+    icon: <CheckCircle2 size={15} />,
   },
   LOW_STOCK: {
     label: "كمية قليلة",
     className: "status-orange",
-    icon: <AlertTriangle size={16} />,
+    icon: <AlertTriangle size={15} />,
   },
   OUT_OF_STOCK: {
     label: "غير متوفر",
     className: "status-red",
-    icon: <XCircle size={16} />,
+    icon: <XCircle size={15} />,
   },
 };
 
+function isAvailableMedicine(item) {
+  return (
+    item.availabilityStatus === "IN_STOCK" ||
+    item.availabilityStatus === "LOW_STOCK"
+  );
+}
+
 function AvailabilityBadge({ status, isStale }) {
   if (isStale) {
-    return <span className="badge status-gray">بيانات قديمة</span>;
+    return (
+      <span className="badge status-gray">
+        <AlertTriangle size={14} />
+        بيانات قديمة
+      </span>
+    );
   }
 
   const current = statusMap[status] || statusMap.OUT_OF_STOCK;
@@ -135,389 +152,412 @@ function AvailabilityBadge({ status, isStale }) {
   );
 }
 
-function TopBar({ screen, onBack }) {
+function TopHeader({ query, setQuery, onSearch, isOffline, setIsOffline }) {
   return (
-    <header className="topbar">
-      <div className="brand">
-        <div className="brand-icon">
-          <Pill size={24} />
-        </div>
+    <header className="main-header">
+      <button
+        type="button"
+        className={isOffline ? "offline-chip active" : "offline-chip"}
+        onClick={() => setIsOffline((currentValue) => !currentValue)}
+      >
+        <WifiOff size={17} />
+        {isOffline ? "Offline مفعل" : "تجربة وضع Offline"}
+      </button>
 
-        <div>
-          <h1>GazaPharma Link</h1>
-          <p>Medicine availability search platform</p>
-        </div>
+      <div className="search-bar-main">
+        <Search size={21} />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="ابحث باسم الدواء..."
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              onSearch();
+            }
+          }}
+        />
       </div>
 
-      {screen !== "search" && (
-        <button className="ghost-btn" onClick={onBack}>
-          <ArrowRight size={18} />
-          رجوع
-        </button>
-      )}
+      <button
+        type="button"
+        className="logo-button"
+        onClick={() => window.location.reload()}
+      >
+        <span>GazaPharma Link</span>
+        <span className="logo-mark">
+          <HeartPulse size={20} />
+        </span>
+      </button>
     </header>
   );
 }
 
-function SearchScreen({ query, setQuery, onSearch, isOffline, setIsOffline }) {
+function SearchScreen({ onSearch }) {
   return (
-    <section className="screen search-screen">
-      <div className="hero-card">
-        <div className="hero-text">
-          <span className="eyebrow">SCRUM-8 Search Results Interface</span>
-
-          <h2>ابحث عن الدواء واعرف الصيدليات المتوفر فيها بسرعة</h2>
-
-          <p>
-            واجهة منظمة تعرض حالة توفر الدواء، آخر تحديث، اسم الصيدلية،
-            المنطقة، ووسيلة التواصل.
-          </p>
+    <section className="search-only-screen">
+      <div className="welcome-card">
+        <div className="welcome-icon">
+          <Pill size={46} />
         </div>
 
-        <div className="search-panel">
-          <label>اسم الدواء أو المادة الفعالة</label>
+        <h1>ابحث عن توفر الدواء بسرعة</h1>
+        <p>اكتب اسم الدواء في شريط البحث بالأعلى ثم انتقل لنتائج التوفر.</p>
 
-          <div className="search-input">
-            <Search size={20} />
-
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="مثال: Panadol 500mg"
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  onSearch();
-                }
-              }}
-            />
-          </div>
-
-          <button className="primary-btn full" onClick={onSearch}>
-            بحث الآن
-            <ArrowLeft size={18} />
-          </button>
-
-          <button
-            className={isOffline ? "offline-btn active" : "offline-btn"}
-            onClick={() => setIsOffline((currentValue) => !currentValue)}
-          >
-            <WifiOff size={17} />
-            {isOffline ? "Offline مفعل" : "تجربة وضع Offline"}
-          </button>
-        </div>
-      </div>
-
-      <div className="feature-grid">
-        <div>
-          <ShieldCheck size={24} />
-          <strong>صيدليات موثقة</strong>
-          <span>عرض حالة الثقة لكل صيدلية</span>
-        </div>
-
-        <div>
-          <Clock size={24} />
-          <strong>آخر تحديث</strong>
-          <span>توضيح حداثة بيانات المخزون</span>
-        </div>
-
-        <div>
-          <MapPin size={24} />
-          <strong>حسب المنطقة</strong>
-          <span>مناسب عند ضعف الموقع أو الاتصال</span>
-        </div>
+        <button className="primary-btn big" onClick={onSearch} type="button">
+          البحث عن الدواء
+          <ArrowLeft size={19} />
+        </button>
       </div>
     </section>
   );
 }
 
-function ResultCard({ item, onOpenDetails }) {
-  const isAvailable =
-    item.availabilityStatus === "IN_STOCK" ||
-    item.availabilityStatus === "LOW_STOCK";
+function FilterBar({
+  count,
+  statusFilter,
+  setStatusFilter,
+  sortType,
+  setSortType,
+}) {
+  return (
+    <div className="filters-row">
+      <button type="button" className="filter-button">
+        تصفية
+        <Filter size={18} />
+      </button>
 
+      <select
+        value={sortType}
+        onChange={(event) => setSortType(event.target.value)}
+      >
+        <option value="recent">الأحدث تحديثًا</option>
+        <option value="nearest">الأقرب</option>
+        <option value="quantity">الأعلى كمية</option>
+      </select>
+
+      <select
+        value={statusFilter}
+        onChange={(event) => setStatusFilter(event.target.value)}
+      >
+        <option value="all">كل الحالات</option>
+        <option value="available">متوفر فقط</option>
+        <option value="low">كمية قليلة</option>
+        <option value="out">غير متوفر</option>
+      </select>
+
+      <div className="results-count">تم العثور على {count} صيدليات</div>
+    </div>
+  );
+}
+
+function ResultCard({ item, onOpenMap, onRequestMedicine }) {
   return (
     <article className={`result-card ${item.isStale ? "stale" : ""}`}>
-      <div className="result-head">
-        <div>
-          <h3>{item.pharmacyName}</h3>
-
-          <p>
-            <ShieldCheck size={15} />
-            {item.trustLevel}
-          </p>
-        </div>
-
+      <div className="card-status">
         <AvailabilityBadge
           status={item.availabilityStatus}
           isStale={item.isStale}
         />
       </div>
 
-      <div className="medicine-box">
-        <Pill size={20} />
+      <div className="result-content">
+        <h3>{item.pharmacyName}</h3>
 
-        <div>
-          <strong>
-            {item.medicineName} {item.strength}
-          </strong>
+        <p className="medicine-name">
+          {item.medicineName} {item.strength} - {item.dosageForm}
+        </p>
+
+        <div className="mini-info">
           <span>
-            {item.genericName} - {item.dosageForm}
+            <MapPin size={15} /> {item.area}
+          </span>
+
+          <span>
+            <MapPin size={15} /> {item.distanceKm} كم
+          </span>
+
+          <span>
+            <Clock size={15} /> منذ {item.lastUpdatedMinutes} دقيقة
+          </span>
+
+          <span>
+            <Package size={15} /> الكمية: {item.quantity} عبوة
           </span>
         </div>
-      </div>
 
-      <div className="meta-grid">
-        <span>
-          <MapPin size={15} />
-          {item.area}
-        </span>
+        <div className="trust-line">
+          {item.trustLevel === "Verified" ? (
+            <ShieldCheck size={19} />
+          ) : (
+            <AlertTriangle size={19} />
+          )}
 
-        <span>
-          <Clock size={15} />
-          منذ {item.lastUpdatedMinutes} دقيقة
-        </span>
-
-        <span>الكمية: {item.quantity} عبوة</span>
-      </div>
-
-      {item.isStale && (
-        <div className="soft-warning">
-          <AlertTriangle size={16} />
-          البيانات قديمة وتحتاج تأكيد
+          <strong
+            className={item.trustLevel === "Verified" ? "verified" : "review"}
+          >
+            {item.trustLevel}
+          </strong>
         </div>
-      )}
+      </div>
 
       <div className="result-actions">
-        {isAvailable ? (
-          <button className="primary-btn" onClick={() => onOpenDetails(item)}>
-            تفاصيل التوفر
-            <ArrowLeft size={16} />
-          </button>
-        ) : (
-          <button className="secondary-btn" onClick={() => onOpenDetails(item)}>
-            ماذا أفعل؟
+        <a className="call-btn" href={`tel:${item.phone}`}>
+          اتصال
+          <Phone size={16} />
+        </a>
+
+        <button
+          className="outline-btn details-map-btn"
+          onClick={() => onOpenMap(item)}
+          type="button"
+        >
+          عرض تفاصيل الدواء والخارطة
+          <MapPin size={16} />
+        </button>
+
+        {!isAvailableMedicine(item) && (
+          <button
+            className="outline-btn"
+            onClick={onRequestMedicine}
+            type="button"
+          >
+            طلب بديل
+            <Send size={16} />
           </button>
         )}
-
-        <a className="call-btn" href={`tel:${item.phone}`}>
-          <Phone size={16} />
-          اتصال
-        </a>
       </div>
     </article>
   );
 }
 
-function ResultsScreen({ query, results, onOpenDetails, onUnavailableFlow }) {
-  const availableResults = results.filter(
-    (item) => item.availabilityStatus !== "OUT_OF_STOCK"
-  );
-
-  const unavailableResults = results.filter(
-    (item) => item.availabilityStatus === "OUT_OF_STOCK"
-  );
+function PharmacyDetailsPanel({ pharmacy, onClose }) {
+  if (!pharmacy) {
+    return null;
+  }
 
   return (
-    <section className="screen results-screen">
-      <div className="page-title">
-        <span className="eyebrow">Search Results</span>
+    <aside className="details-panel">
+      <button
+        type="button"
+        className="close-panel"
+        onClick={onClose}
+        aria-label="إغلاق التفاصيل"
+      >
+        <X size={18} />
+      </button>
 
-        <h2>نتائج البحث عن: {query || "—"}</h2>
-
-        <p>
-          اختاري صيدلية متوفر فيها الدواء لعرض التفاصيل، أو انتقلي لمسار الدواء
-          غير المتوفر.
-        </p>
-      </div>
-
-      <div className="stats-row">
-        <div>
-          <strong>{results.length}</strong>
-          <span>كل النتائج</span>
-        </div>
+      <div className="panel-top">
+        <AvailabilityBadge
+          status={pharmacy.availabilityStatus}
+          isStale={pharmacy.isStale}
+        />
 
         <div>
-          <strong>{availableResults.length}</strong>
-          <span>متوفر / كمية قليلة</span>
-        </div>
-
-        <div>
-          <strong>{unavailableResults.length}</strong>
-          <span>غير متوفر</span>
+          <h3>{pharmacy.pharmacyName}</h3>
+          <p>آخر تحديث: منذ {pharmacy.lastUpdatedMinutes} دقيقة</p>
         </div>
       </div>
 
-      {availableResults.length > 0 && (
-        <div className="section-block">
-          <div className="section-heading">
-            <CheckCircle2 size={20} />
-            <h3>الصيدليات المتوفر فيها الدواء</h3>
-          </div>
-
-          <div className="cards-grid">
-            {availableResults.map((item) => (
-              <ResultCard
-                key={item.id}
-                item={item}
-                onOpenDetails={onOpenDetails}
-              />
-            ))}
-          </div>
+      <div className="detail-grid">
+        <div>
+          <MapPin size={26} />
+          <span>الحي</span>
+          <strong>{pharmacy.area}</strong>
         </div>
-      )}
 
-      {unavailableResults.length > 0 && (
-        <div className="section-block">
-          <div className="section-heading unavailable-title">
-            <XCircle size={20} />
-            <h3>صيدليات لا يتوفر فيها الدواء</h3>
-          </div>
-
-          <div className="cards-grid">
-            {unavailableResults.map((item) => (
-              <ResultCard
-                key={item.id}
-                item={item}
-                onOpenDetails={onUnavailableFlow}
-              />
-            ))}
-          </div>
+        <div>
+          <SlidersHorizontal size={26} />
+          <span>المسافة</span>
+          <strong>{pharmacy.distanceKm} كم</strong>
         </div>
-      )}
 
-      {availableResults.length === 0 && (
-        <button className="primary-btn center-btn" onClick={onUnavailableFlow}>
-          إرسال طلب دواء مطلوب
-          <Send size={16} />
+        <div>
+          <Clock size={26} />
+          <span>ساعات العمل</span>
+          <strong>{pharmacy.workingHours}</strong>
+        </div>
+
+        <div>
+          <Phone size={26} />
+          <span>الهاتف</span>
+          <strong>{pharmacy.phone}</strong>
+        </div>
+
+        <div>
+          <ShieldCheck size={26} />
+          <span>حالة الثقة</span>
+          <strong>{pharmacy.trustLevel}</strong>
+        </div>
+
+        <div>
+          <Package size={26} />
+          <span>الكمية</span>
+          <strong>{pharmacy.quantity} عبوة</strong>
+        </div>
+      </div>
+
+      <div className="warning-box">
+        <AlertTriangle size={18} />
+        {pharmacy.note}
+      </div>
+
+      <a className="primary-btn full" href={`tel:${pharmacy.phone}`}>
+        الاتصال بالصيدلية
+        <Phone size={17} />
+      </a>
+    </aside>
+  );
+}
+
+function AvailabilityScreen({
+  results,
+  onOpenMap,
+  onRequestMedicine,
+  onBackToSearch,
+  statusFilter,
+  setStatusFilter,
+  sortType,
+  setSortType,
+}) {
+  return (
+    <section className="content-screen">
+      <div className="screen-actions">
+        <button className="back-btn" type="button" onClick={onBackToSearch}>
+          <ArrowRight size={17} />
+          رجوع للبحث
         </button>
-      )}
+      </div>
+
+      <FilterBar
+        count={results.length}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        sortType={sortType}
+        setSortType={setSortType}
+      />
+
+      <div className="availability-layout results-only-layout">
+        <div className="results-column full-results-column">
+          {results.length === 0 ? (
+            <div className="empty-card">
+              <XCircle size={44} />
+              <h2>لا توجد نتائج مطابقة</h2>
+              <p>جرّب كتابة اسم الدواء بشكل أبسط مثل Panadol أو Paracetamol.</p>
+
+              <button
+                className="primary-btn"
+                onClick={onRequestMedicine}
+                type="button"
+              >
+                طلب دواء غير موجود
+                <Send size={16} />
+              </button>
+            </div>
+          ) : (
+            results.map((item) => (
+              <ResultCard
+                key={item.id}
+                item={item}
+                onOpenMap={onOpenMap}
+                onRequestMedicine={onRequestMedicine}
+              />
+            ))
+          )}
+
+          <button
+            className="request-footer"
+            type="button"
+            onClick={onRequestMedicine}
+          >
+            طلب دواء غير موجود
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
 
-function UnavailableScreen({ query, onBackToResults }) {
+function MapScreen({
+  query,
+  results,
+  selectedPharmacy,
+  setSelectedPharmacy,
+  onBackToAvailability,
+}) {
   return (
-    <section className="screen unavailable-screen">
-      <div className="empty-card professional-empty">
-        <div className="empty-icon">
+    <section className="content-screen">
+      <div className="map-page-header">
+        <button className="back-btn" type="button" onClick={onBackToAvailability}>
+          <ArrowRight size={17} />
+          الرجوع للتوفر
+        </button>
+
+        <h2>تفاصيل الدواء والخارطة</h2>
+        <p>{query || "—"}</p>
+      </div>
+
+      <div className="map-layout-full">
+        <MapComponent
+          pharmacies={results.length ? results : pharmacies}
+          selectedPharmacy={selectedPharmacy}
+          onSelectPharmacy={setSelectedPharmacy}
+        />
+
+        <PharmacyDetailsPanel
+          pharmacy={selectedPharmacy}
+          onClose={() => setSelectedPharmacy(results[0] || pharmacies[0])}
+        />
+      </div>
+    </section>
+  );
+}
+
+function RequestScreen({ query, onBackToAvailability }) {
+  return (
+    <section className="request-screen">
+      <div className="request-card">
+        <div className="request-icon">
           <XCircle size={44} />
         </div>
 
-        <span className="eyebrow">Unavailable Medicine Flow</span>
+        <h2>طلب دواء غير متوفر</h2>
+        <p>املأ البيانات التالية لإرسال طلب الدواء المطلوب.</p>
 
-        <h2>الدواء غير متوفر حاليًا</h2>
+        <div className="form-grid">
+          <label>
+            اسم الدواء
+            <input value={query} readOnly />
+          </label>
 
-        <p>
-          يمكن للمستخدم إرسال طلب "دواء مطلوب" للصيدليات المطابقة، أو الرجوع
-          للنتائج ومراجعة الصيدليات ذات الكمية القليلة.
-        </p>
+          <label>
+            المنطقة
+            <select defaultValue="gaza">
+              <option value="gaza">غزة</option>
+              <option value="north">الشمال</option>
+              <option value="middle">الوسطى</option>
+              <option value="khan">خانيونس</option>
+              <option value="rafah">رفح</option>
+            </select>
+          </label>
 
-        <div className="request-box">
-          <label>اسم الدواء المطلوب</label>
-          <input value={query} readOnly />
-
-          <label>المنطقة</label>
-          <select defaultValue="gaza">
-            <option value="gaza">غزة</option>
-            <option value="north">الشمال</option>
-            <option value="middle">الوسطى</option>
-            <option value="khan">خانيونس</option>
-            <option value="rafah">رفح</option>
-          </select>
-
-          <button className="primary-btn full">
-            <Send size={16} />
-            إرسال الطلب
-          </button>
+          <label className="wide">
+            ملاحظة اختيارية
+            <input placeholder="مثال: أحتاج الدواء اليوم" />
+          </label>
         </div>
 
-        <button className="secondary-btn" onClick={onBackToResults}>
-          الرجوع إلى النتائج
+        <button className="primary-btn full" type="button">
+          إرسال الطلب
+          <Send size={17} />
         </button>
-      </div>
-    </section>
-  );
-}
 
-function DetailsScreen({ selected }) {
-  return (
-    <section className="screen details-screen">
-      <div className="details-layout">
-        <div className="details-main-card">
-          <AvailabilityBadge
-            status={selected.availabilityStatus}
-            isStale={selected.isStale}
-          />
-
-          <div className="pill-large">
-            <Pill size={46} />
-          </div>
-
-          <h2>
-            {selected.medicineName} {selected.strength}
-          </h2>
-
-          <p>
-            {selected.genericName} - {selected.dosageForm}
-          </p>
-
-          <div className="detail-grid">
-            <div>
-              <span>الكمية</span>
-              <strong>{selected.quantity} عبوة</strong>
-            </div>
-
-            <div>
-              <span>آخر تحديث</span>
-              <strong>منذ {selected.lastUpdatedMinutes} دقيقة</strong>
-            </div>
-
-            <div>
-              <span>حالة التوثيق</span>
-              <strong>{selected.trustLevel}</strong>
-            </div>
-
-            <div>
-              <span>المسافة</span>
-              <strong>{selected.distanceKm} km</strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="pharmacy-card">
-          <h3>{selected.pharmacyName}</h3>
-
-          <p>
-            <MapPin size={17} />
-            {selected.area}
-          </p>
-
-          <p>
-            <Clock size={17} />
-            {selected.workingHours}
-          </p>
-
-          <p>
-            <Phone size={17} />
-            {selected.phone}
-          </p>
-
-          <div className="note-box">
-            <AlertTriangle size={18} />
-            {selected.note}
-          </div>
-
-          <div className="map-card">
-            <MapPin size={30} />
-            <strong>موقع الصيدلية</strong>
-            <span>خريطة أو بديل نصي حسب المنطقة</span>
-          </div>
-
-          <a className="primary-btn full" href={`tel:${selected.phone}`}>
-            <Phone size={16} />
-            الاتصال بالصيدلية
-          </a>
-        </div>
+        <button
+          className="outline-btn full"
+          onClick={onBackToAvailability}
+          type="button"
+        >
+          الرجوع إلى نتائج التوفر
+        </button>
       </div>
     </section>
   );
@@ -526,13 +566,15 @@ function DetailsScreen({ selected }) {
 export default function SearchResultsPage() {
   const [screen, setScreen] = useState("search");
   const [query, setQuery] = useState("Panadol 500mg");
-  const [selected, setSelected] = useState(null);
+  const [selectedPharmacy, setSelectedPharmacy] = useState(pharmacies[0]);
   const [isOffline, setIsOffline] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortType, setSortType] = useState("recent");
 
   const results = useMemo(() => {
     const words = query.toLowerCase().trim().split(" ").filter(Boolean);
 
-    return pharmacies.filter((item) => {
+    const filteredBySearch = pharmacies.filter((item) => {
       const text = `
         ${item.medicineName}
         ${item.genericName}
@@ -540,69 +582,127 @@ export default function SearchResultsPage() {
         ${item.dosageForm}
         ${item.pharmacyName}
         ${item.area}
+        ${item.neighborhood}
       `.toLowerCase();
 
       return words.length === 0 || words.every((word) => text.includes(word));
     });
-  }, [query]);
 
-  const goBack = () => {
-    if (screen === "details" || screen === "unavailable") {
-      setScreen("results");
-      return;
-    }
+    const filteredByStatus = filteredBySearch.filter((item) => {
+      if (statusFilter === "available") {
+        return item.availabilityStatus === "IN_STOCK";
+      }
 
-    setScreen("search");
+      if (statusFilter === "low") {
+        return item.availabilityStatus === "LOW_STOCK";
+      }
+
+      if (statusFilter === "out") {
+        return item.availabilityStatus === "OUT_OF_STOCK";
+      }
+
+      return true;
+    });
+
+    return [...filteredByStatus].sort((a, b) => {
+      if (sortType === "nearest") {
+        return a.distanceKm - b.distanceKm;
+      }
+
+      if (sortType === "quantity") {
+        return b.quantity - a.quantity;
+      }
+
+      return a.lastUpdatedMinutes - b.lastUpdatedMinutes;
+    });
+  }, [query, statusFilter, sortType]);
+
+  const firstAvailableResult =
+    results.find(isAvailableMedicine) || results[0] || pharmacies[0];
+
+  const handleSearch = () => {
+    setSelectedPharmacy(firstAvailableResult);
+    setScreen("availability");
   };
 
-  const openDetails = (item) => {
-    setSelected(item);
-
-    if (item.availabilityStatus === "OUT_OF_STOCK") {
-      setScreen("unavailable");
-    } else {
-      setScreen("details");
-    }
+  const openMap = (pharmacy) => {
+    setSelectedPharmacy(pharmacy);
+    setScreen("map");
   };
 
   return (
     <main className="app" dir="rtl">
-      <TopBar screen={screen} onBack={goBack} />
+      <TopHeader
+        query={query}
+        setQuery={setQuery}
+        onSearch={handleSearch}
+        isOffline={isOffline}
+        setIsOffline={setIsOffline}
+      />
 
       {isOffline && (
         <div className="offline-banner">
           <WifiOff size={18} />
-          أنت الآن غير متصل. يتم عرض آخر نتائج محفوظة.
+          يتم عرض آخر نتائج محفوظة.
         </div>
       )}
 
-      {screen === "search" && (
-        <SearchScreen
-          query={query}
-          setQuery={setQuery}
-          onSearch={() => setScreen("results")}
-          isOffline={isOffline}
-          setIsOffline={setIsOffline}
+      <nav className="stepper" aria-label="تدفق الشاشات">
+        <span className={screen === "search" ? "active" : "done"}>
+          <Search size={16} />
+          البحث
+        </span>
+
+        <span
+          className={
+            screen === "availability" || screen === "request"
+              ? "active"
+              : screen === "map"
+              ? "done"
+              : ""
+          }
+        >
+          <ListChecks size={16} />
+          التوفر
+        </span>
+
+        <span className={screen === "map" ? "active" : ""}>
+          <Map size={16} />
+          الخريطة
+        </span>
+      </nav>
+
+      {screen === "search" && <SearchScreen onSearch={handleSearch} />}
+
+      {screen === "availability" && (
+        <AvailabilityScreen
+          results={results}
+          onOpenMap={openMap}
+          onRequestMedicine={() => setScreen("request")}
+          onBackToSearch={() => setScreen("search")}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          sortType={sortType}
+          setSortType={setSortType}
         />
       )}
 
-      {screen === "results" && (
-        <ResultsScreen
+      {screen === "map" && (
+        <MapScreen
           query={query}
           results={results}
-          onOpenDetails={openDetails}
-          onUnavailableFlow={() => setScreen("unavailable")}
+          selectedPharmacy={selectedPharmacy || firstAvailableResult}
+          setSelectedPharmacy={setSelectedPharmacy}
+          onBackToAvailability={() => setScreen("availability")}
         />
       )}
 
-      {screen === "unavailable" && (
-        <UnavailableScreen
+      {screen === "request" && (
+        <RequestScreen
           query={query}
-          onBackToResults={() => setScreen("results")}
+          onBackToAvailability={() => setScreen("availability")}
         />
       )}
-
-      {screen === "details" && selected && <DetailsScreen selected={selected} />}
     </main>
   );
 }
