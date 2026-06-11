@@ -95,7 +95,7 @@ function PharmacistDashboard({ onLogout }) {
                   <label style={{ display: "block", color: "#344054", fontWeight: "bold", marginBottom: "6px", fontSize: "14px" }}>اسم الدواء</label>
                   <div className="search-input">
                     <input
-                      placeholder="مثال: Panadol 500mg"
+                      placeholder="ex:Panadol 500mg"
                       value={newMed.name}
                       onChange={(e) => setNewMed(prev => ({ ...prev, name: e.target.value }))}
                       style={{ width: "100%", direction: "ltr" }}
@@ -106,7 +106,7 @@ function PharmacistDashboard({ onLogout }) {
                   <label style={{ display: "block", color: "#344054", fontWeight: "bold", marginBottom: "6px", fontSize: "14px" }}>الاسم الجنيس</label>
                   <div className="search-input">
                     <input
-                      placeholder="مثال: Paracetamol"
+                      placeholder="ex:Paracetamol"
                       value={newMed.generic}
                       onChange={(e) => setNewMed(prev => ({ ...prev, generic: e.target.value }))}
                       style={{ width: "100%", direction: "ltr" }}
