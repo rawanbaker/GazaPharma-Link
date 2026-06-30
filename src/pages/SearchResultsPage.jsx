@@ -31,6 +31,15 @@ import {
   XCircle,
 } from "lucide-react";
 
+// ==========================================
+// البيانات الثابتة المحاكية (Mock Data)
+// ==========================================
+const localMedicines = [
+  { name: "Acamol", company: "بيرزيت", category: "مسكن آلام", price: "10 ILS", rx: false, status: "متوفر", pharmacy: "صيدلية الرمال", area: "الرمال" },
+  { name: "Insulin", company: "شفا", category: "سكري", price: "45 ILS", rx: true, status: "مخزون منخفض", pharmacy: "صيدلية الشفاء", area: "وسط غزة" },
+  { name: "Panadol", company: "القدس", category: "مسكن ومضاد", price: "12 ILS", rx: false, status: "غير متوفر", pharmacy: "صيدلية القدس", area: "النصر" }
+];
+
 const pharmacies = [
   { id: 1, pharmacyName: "صيدلية الشفاء", medicineName: "Panadol", genericName: "Paracetamol", strength: "500mg", dosageForm: "Tablets", availabilityStatus: "IN_STOCK", quantity: 12, lastUpdatedMinutes: 15, area: "الرمال - غزة", neighborhood: "الرمال", distanceKm: 0.5, price: "15 شيكل", phone: "0599000001", trustLevel: "Verified", isStale: false, workingHours: "9:00 ص - 8:00 م", mapPosition: { x: 44, y: 27 }, note: "يفضل الاتصال قبل الذهاب لأن حالة المخزون قد تتغير بسرعة." },
   { id: 2, pharmacyName: "صيدلية القدس", medicineName: "Panadol", genericName: "Paracetamol", strength: "500mg", dosageForm: "Tablets", availabilityStatus: "LOW_STOCK", quantity: 3, lastUpdatedMinutes: 35, area: "النصر - غزة", neighborhood: "النصر", distanceKm: 1.2, price: "16 شيكل", phone: "0599000002", trustLevel: "Verified", isStale: false, workingHours: "10:00 ص - 7:00 م", mapPosition: { x: 66, y: 42 }, note: "الكمية محدودة وقد تنفد خلال وقت قصير." },
@@ -53,6 +62,9 @@ const statusMap = {
   OUT_OF_STOCK: { label: "غير متوفر", className: "status-red", icon: <XCircle size={15} /> },
 };
 
+// ==========================================
+// دالات المساعدة والمنطق (Helper Functions)
+// ==========================================
 function isAvailableMedicine(item) {
   return item.availabilityStatus === "IN_STOCK" || item.availabilityStatus === "LOW_STOCK";
 }
@@ -88,6 +100,9 @@ function getFilteredResults(searchTerm, filterValue, sortValue) {
   });
 }
 
+// ==========================================
+// المكونات الفرعية المشتركة (UI Components)
+// ==========================================
 function AvailabilityBadge({ status, isStale }) {
   if (isStale) {
     return (
@@ -120,7 +135,10 @@ function AppShell({ screen, setScreen, isOffline, setIsOffline, onLogout, userNa
   ];
 
   const safeNavigate = (key) => {
-    if (key === "saved" || key === "help") return;
+    if (key === "saved" || key === "help") {
+      setScreen(key);
+      return;
+    }
     setScreen(key);
   };
 
@@ -223,6 +241,9 @@ function TopHeader({ isOffline, setIsOffline }) {
   );
 }
 
+// ==========================================
+// شاشات التطبيق الأساسية (Screens)
+// ==========================================
 function SearchScreen({ query, setQuery, onSearch, isOffline }) {
   return (
     <section className="search-stage">
@@ -345,48 +366,6 @@ function ResultsMetrics({ results }) {
   );
 }
 
-function ResultRow({ item, onOpenMap, onRequestMedicine }) {
-  return (
-    <tr>
-      <td>
-        <div className="pharmacy-cell">
-          <MapPin size={19} />
-          <div>
-            <strong>{item.pharmacyName}</strong>
-            <small>{item.area}</small>
-          </div>
-        </div>
-      </td>
-
-      <td>{item.distanceKm} كم</td>
-      <td>{item.price}</td>
-      <td>{item.quantity > 0 ? "متوفر" : "غير متوفر"}</td>
-      <td><AvailabilityBadge status={item.availabilityStatus} isStale={item.isStale} /></td>
-
-      <td>
-        <button className="primary-btn row-btn" type="button" onClick={() => onOpenMap(item)}>
-          عرض التفاصيل والخريطة
-          <MapPin size={15} />
-        </button>
-      </td>
-
-      <td>
-        {!isAvailableMedicine(item) ? (
-          <button className="outline-btn row-btn" type="button" onClick={onRequestMedicine}>
-            طلب بديل
-            <Send size={15} />
-          </button>
-        ) : (
-          <a className="call-btn row-btn" href={`tel:${item.phone}`}>
-            اتصال
-            <Phone size={15} />
-          </a>
-        )}
-      </td>
-    </tr>
-  );
-}
-
 function ResultsTable({ results, onOpenMap, onRequestMedicine }) {
   return (
     <section className="results-cards-section">
@@ -395,7 +374,6 @@ function ResultsTable({ results, onOpenMap, onRequestMedicine }) {
           <h2>نتائج البحث</h2>
           <p>كل صيدلية تظهر كبطاقة مستقلة لتسهيل المقارنة والاختيار.</p>
         </div>
-
         <span>{results.length} صيدليات</span>
       </div>
 
@@ -436,7 +414,6 @@ function ResultsTable({ results, onOpenMap, onRequestMedicine }) {
               <div className="pharmacy-title-area">
                 <div className="title-line">
                   <h3>{item.pharmacyName}</h3>
-
                   <span
                     className={
                       item.trustLevel === "Verified"
@@ -460,17 +437,14 @@ function ResultsTable({ results, onOpenMap, onRequestMedicine }) {
                     <span>الدواء</span>
                     <strong dir="ltr">{item.medicineName} {item.strength}</strong>
                   </div>
-
                   <div>
                     <span>الشكل الدوائي</span>
                     <strong dir="ltr">{item.dosageForm}</strong>
                   </div>
-
                   <div>
                     <span>الكمية المتوفرة</span>
                     <strong>{item.quantity} عبوة</strong>
                   </div>
-
                   <div>
                     <span>السعر</span>
                     <strong>{item.price}</strong>
@@ -637,7 +611,6 @@ function PharmacyDetailsPanel({ pharmacy, onClose, onBackToAvailability }) {
     <aside className="details-panel">
       <div className="panel-top">
         <AvailabilityBadge status={pharmacy.availabilityStatus} isStale={pharmacy.isStale} />
-
         <div>
           <h3>{pharmacy.pharmacyName}</h3>
           <p>{pharmacy.area}</p>
@@ -835,79 +808,58 @@ function ConnectionStates({ isOffline }) {
 
       <div className={isOffline ? "offline" : ""}>
         <WifiOff size={20} />
-        <strong>غير متصل</strong>
-        <span>سيتم استخدام آخر نتائج محفوظة</span>
-      </div>
-
-      <div>
-        <Cloud size={20} />
-        <strong>حفظ البحث والطلبات</strong>
-        <span>تتم مزامنتها عند عودة الاتصال</span>
+        <strong>غير متصل بالإنترنت</strong>
+        <span>يتم عرض النتائج من الذاكرة المحلية المخزنة</span>
       </div>
     </section>
   );
 }
 
-export default function SearchResultsPage({ onLogout, userName = "مستخدم غزة فارما" }) {
-  const [screen, setScreen] = useState("search");
-  const [query, setQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
-  const [selectedPharmacy, setSelectedPharmacy] = useState(null);
+// ==========================================
+// المكون الرئيسي الجاهز للتصدير (Main App)
+// ==========================================
+export default function GazaPharmaApp() {
+  // إدارة حالات الشاشات والاتصال الرقمي لروان
+  const [screen, setScreen] = useState("search"); 
   const [isOffline, setIsOffline] = useState(false);
+  const [userName, setUserName] = useState("روان باقر");
+
+  // إدارة حالات البحث والتصنيفات
+  const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortType, setSortType] = useState("recent");
+  
+  // حالة إدارة تفاصيل خريطة الصيدلية المحددة
+  const [selectedPharmacy, setSelectedPharmacy] = useState(pharmacies[0]);
 
-  const results = useMemo(() => {
-    if (!submittedQuery.trim()) return [];
-    return getFilteredResults(submittedQuery, statusFilter, sortType);
-  }, [submittedQuery, statusFilter, sortType]);
+  // تحديث النتائج المفلترة بناءً على مدخلات البحث والتصفية
+  const filteredResults = useMemo(() => {
+    return getFilteredResults(query, statusFilter, sortType);
+  }, [query, statusFilter, sortType]);
 
-  const firstAvailableResult = results.find(isAvailableMedicine) || results[0] || pharmacies[0];
-
+  // محاكاة تحويل البحث مع تأثير شاشة الانتظار
   const handleSearch = () => {
-    const cleanQuery = query.trim();
-
-    if (!cleanQuery) return;
-
-    const immediateResults = getFilteredResults(cleanQuery, statusFilter, sortType);
-
-    setSubmittedQuery(cleanQuery);
-    setSelectedPharmacy(immediateResults.find(isAvailableMedicine) || immediateResults[0] || pharmacies[0]);
     setScreen("loading");
-
-    window.setTimeout(() => {
+    setTimeout(() => {
       setScreen("availability");
-    }, isOffline ? 950 : 650);
+    }, 800); 
   };
 
-  const openMap = (pharmacy) => {
+  const handleOpenMap = (pharmacy) => {
     setSelectedPharmacy(pharmacy);
     setScreen("map");
   };
 
-  const backToSearch = () => {
-    setScreen("search");
-  };
-
-  const backToAvailability = () => {
-    setSelectedPharmacy(firstAvailableResult);
-    setScreen("availability");
-  };
-
   return (
-    <AppShell screen={screen} setScreen={setScreen} isOffline={isOffline} setIsOffline={setIsOffline} onLogout={onLogout} userName={userName}>
-      <TopHeader
-        isOffline={isOffline}
-        setIsOffline={setIsOffline}
-      />
-
-      {isOffline && (
-        <div className="offline-banner">
-          <WifiOff size={18} />
-          وضع Offline مفعل، سيتم عرض آخر نتائج محفوظة وقد تكون البيانات غير محدثة.
-        </div>
-      )}
-
+    <AppShell
+      screen={screen}
+      setScreen={setScreen}
+      isOffline={isOffline}
+      setIsOffline={setIsOffline}
+      userName={userName}
+      onLogout={() => console.log("تسجيل خروج...")}
+    >
+      {/* التوجيه والتبديل الديناميكي بين شاشات واجهة التطبيق */}
       {screen === "search" && (
         <SearchScreen
           query={query}
@@ -917,42 +869,46 @@ export default function SearchResultsPage({ onLogout, userName = "مستخدم �
         />
       )}
 
-      {screen === "loading" && <LoadingScreen isOffline={isOffline} />}
+      {screen === "loading" && (
+        <LoadingScreen isOffline={isOffline} />
+      )}
 
       {screen === "availability" && (
         <AvailabilityScreen
-          results={results}
-          onOpenMap={openMap}
-          onRequestMedicine={() => setScreen("request")}
-          onBackToSearch={backToSearch}
+          results={filteredResults}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
           sortType={sortType}
           setSortType={setSortType}
+          onOpenMap={handleOpenMap}
+          onRequestMedicine={() => setScreen("request")}
+          onBackToSearch={() => setScreen("search")}
         />
       )}
 
       {screen === "map" && (
         <MapScreen
-          query={submittedQuery}
-          results={results}
-          selectedPharmacy={selectedPharmacy || firstAvailableResult}
+          query={query}
+          results={filteredResults}
+          selectedPharmacy={selectedPharmacy}
           setSelectedPharmacy={setSelectedPharmacy}
-          onBackToAvailability={backToAvailability}
+          onBackToAvailability={() => setScreen("availability")}
         />
       )}
 
       {screen === "request" && (
         <RequestScreen
-          query={submittedQuery || query}
-          onBackToAvailability={backToAvailability}
+          query={query}
+          onBackToAvailability={() => setScreen("availability")}
         />
       )}
 
-      {screen === "saved" && <PlaceholderScreen title="القوائم المحفوظة" />}
-      {screen === "help" && <PlaceholderScreen title="المساعدة" />}
-
-      {screen === "search" && <ConnectionStates isOffline={isOffline} />}
+      {(screen === "saved" || screen === "help") && (
+        <PlaceholderScreen title={screen === "saved" ? "القوائم المحفوظة" : "مركز الدعم والمساعدة"} />
+      )}
+      
+      {/* شريط المؤشر السفلي لحالة الشبكة */}
+      <ConnectionStates isOffline={isOffline} />
     </AppShell>
   );
 }
