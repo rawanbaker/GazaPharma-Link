@@ -22,16 +22,20 @@ public class Medicine {
     @Column(name = "status")
     private String status;
 
-    // 1. المِشيد الافتراضي (Default Constructor) - ضروري جداً لـ JPA
+    @Column(name = "quantity") // إضافة حقل الكمية للمخزون الفوري (SCRUM-22)
+    private Integer quantity;
+
+    // 1. المِشيد الافتراضي (Default Constructor)
     public Medicine() {
     }
 
-    // 2. مِشيد مخصص لسهولة إنشاء الكائنات (Parameterized Constructor)
-    public Medicine(String tradeName, String scientificName, String category, String status) {
+    // 2. مِشيد مخصص لسهولة إنشاء الكائنات
+    public Medicine(String tradeName, String scientificName, String category, String status, Integer quantity) {
         this.tradeName = tradeName;
         this.scientificName = scientificName;
         this.category = category;
         this.status = status;
+        this.quantity = quantity;
     }
 
     // 3. دالات الجلب والتعديل (Getters and Setters)
@@ -73,5 +77,13 @@ public class Medicine {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }
