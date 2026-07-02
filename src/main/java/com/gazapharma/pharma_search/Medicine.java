@@ -17,6 +17,7 @@ public class Medicine {
     private boolean available;
     private String stockStatus;
 
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -38,4 +39,9 @@ public class Medicine {
     public String getStockStatus() { return stockStatus; }
     public void setStockStatus(String stockStatus) { this.stockStatus = stockStatus; }
 }
+
+
+
+
+
 

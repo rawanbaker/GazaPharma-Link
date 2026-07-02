@@ -19,4 +19,3 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
 
     List<Medicine> findByCategoryContainingIgnoreCase(String category);
 }
-

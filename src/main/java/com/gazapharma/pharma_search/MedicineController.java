@@ -1,6 +1,7 @@
 package com.gazapharma.pharma_search;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,27 +20,32 @@ public class MedicineController {
 
     @GetMapping("/search")
     public List<Medicine> searchMedicines(
-        @RequestParam(required = false) String tradeName,
-        @RequestParam(required = false) String scientificName,
-        @RequestParam(required = false) String activeIngredient,
-        @RequestParam(required = false) String category,
-        @RequestParam(required = false) String stockStatus,
-        @RequestParam(required = false) Boolean available) {
+            @RequestParam(required = false) String tradeName,
+            @RequestParam(required = false) String scientificName,
+            @RequestParam(required = false) String activeIngredient,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String stockStatus,
+            @RequestParam(required = false) Boolean available) {
 
-        if (tradeName != null)
+        if (tradeName != null) {
             return medicineRepository.findByTradeNameContainingIgnoreCase(tradeName);
-        if (scientificName != null)
+        }
+        if (scientificName != null) {
             return medicineRepository.findByScientificNameContainingIgnoreCase(scientificName);
-        if (activeIngredient != null)
+        }
+        if (activeIngredient != null) {
             return medicineRepository.findByActiveIngredientContainingIgnoreCase(activeIngredient);
-        if (category != null)
+        }
+        if (category != null) {
             return medicineRepository.findByCategoryContainingIgnoreCase(category);
-        if (stockStatus != null)
+        }
+        if (stockStatus != null) {
             return medicineRepository.findByStockStatus(stockStatus);
-        if (available != null)
+        }
+        if (available != null) {
             return medicineRepository.findByAvailable(available);
+        }
 
         return medicineRepository.findAll();
     }
 }
-
